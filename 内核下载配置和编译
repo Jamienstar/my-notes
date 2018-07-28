@@ -1,0 +1,26 @@
+
+stable kernel:
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+latest -rc tree
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+查看tag：
+git tag -l
+
+切换对应版本：
+
+git checkout 版本
+
+拷贝配置文件：
+cp /boot/config-`uname -r`* .config
+
+
+32位pc：
+记得将CONFIG_64_BIT配置去掉
+
+编译：
+make
+
+
+关闭配置项：
+scripts/config --disable CC_STACKPROTECTOR_STRONG
