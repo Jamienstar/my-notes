@@ -1,0 +1,14 @@
+1、ubuntu环境 vim方向键为ABCD， 应重新安装 vim
+	sudo apt install vim-gtk
+
+
+2、vim sfp环境
+	curl https://j.mp/tax-vim -L > spf13-vim.sh && sh spf13-vim.sh
+
+3、vim ctrl + ]现实目标列表
+
+	:set cscopetag
+
+4、solarized配色
+	https://github.com/vim-airline/vim-airline-themes
+	cp ./.vim/bundle/vim-airline-themes/autoload/airline/themes/*.vim ./.vim/bundle/vim-airline/autoload/airline/themes/
