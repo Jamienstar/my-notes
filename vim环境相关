@@ -12,3 +12,21 @@
 4、solarized配色
 	https://github.com/vim-airline/vim-airline-themes
 	cp ./.vim/bundle/vim-airline-themes/autoload/airline/themes/*.vim ./.vim/bundle/vim-airline/autoload/airline/themes/
+
+5、spf13环境中添加自己的环境信息
+
+	将信息改入 .vimrc.local文件中,为了使信息生效，可以删除~/.vimviews/目录
+	覆盖顺序：
+	.vimrc.before - spf13-vim before configuration
+	.vimrc.before.fork - fork before configuration
+	.vimrc.before.local - before user configuration
+	.vimrc.bundles - spf13-vim bundle configuration
+	.vimrc.bundles.fork - fork bundle configuration
+	.vimrc.bundles.local - local user bundle configuration
+	.vimrc - spf13-vim vim configuration
+	.vimrc.fork - fork vim configuration
+	.vimrc.local - local user configuration
+
+6、spf13中的常用命令
+     （1）ctrl + e        显示目录树结构, o字母打开文件或者展开目录
+     （2）,tt             显示当前文件中的文件信息
