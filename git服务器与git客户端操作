@@ -1,10 +1,22 @@
 
-git服务器搭建
+一、git服务器搭建
 
-1、在相应目录中输入 git init --bare kernel.git 建立空仓库
+	（1）git账户创建
+
+		1、useradd git
+
+		2、passwd git
+
+		3、usermod -s /bin/bash git
+
+		4、usermod -d /home/git git
+
+	（2）git仓库创建
+		在相应目录中输入 git init --bare kernel.git 建立空仓库
+		空仓库创建后，由git客户端将代码push到仓库中
 
 
-Git 客户端操作
+二、git 客户端操作
 
 1     ssh-keygen -t rsa 
 
@@ -16,11 +28,8 @@ Git 客户端操作
 	Note: this step need passwd.
  
 
-git clone git@serverip:/home/git/xxxx/xxxx/kernel.git
+git clone git@serverip:/home/git/xxxx/xxxx/kernel.git      克隆空仓库
 
- 
-
- 
 
 git add -A
 
@@ -42,15 +51,6 @@ git pull origin dev
  
  
 
-git账户创建
 
-
-1、useradd git
-
-2、passwd git
-
-3、usermod -s /bin/bash git
-
-4、usermod -d /home/git git
 
 
