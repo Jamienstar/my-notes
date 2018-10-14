@@ -1,0 +1,23 @@
+
+1、sudo apt-get install xinetd
+2、sudo apt-get install tftp tftpd
+
+3、使用命令："vi /etc/xinetd.d/tftp"建立文件，向文件中写入如下代码
+
+service tftp
+{
+	socket_type	= dgram
+	protocol 	= udp
+	wait 		= yes
+	user 		= root
+	server 		= /usr/sbin/in.tftpd
+	server_args 	= -s /var/tftpboot/
+	disable 	= no
+	per_source 	= 11
+	cps 		= 100 2
+	flags 		= IPv4
+}
+
+4、设置/var/tftpboot的访问权限为777.
+
+5、最后重启xinetd服务。输入命令：“sudo /etc/init.d/xinetd restart”.到这里，TFTP服务器就搭建好了
