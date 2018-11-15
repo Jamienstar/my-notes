@@ -1,0 +1,29 @@
+dts也需要修改，参考如下修改，假设ethernet@0x40000000节点需要修改为无phy网口：
+原节点信息
+        ethernet@0x40000000 {
+            compatible = "snps,dwmac-3.70a", "ls,ls-gmac";
+            reg = <0x40000000 0xffff>;
+            interrupt-parent = <&icu>;
+            interrupts = <20 21>;
+            interrupt-names = "macirq", "eth_wake_irq";
+            /*mac-address = [ 64 48 48 48 48 60 ]; [>mac 64:48:48:48:48:60 <]*/
+            phy-mode = "rgmii";
+            bus_id = <0x0>;
+            phy_addr = <0xffffffff>;
+            dma-mask = <0xffffffff 0xffffffff>;
+        };
+
+请修改为：
+        ethernet@0x40000000 {
+            compatible = "snps,dwmac-3.70a", "ls,ls-gmac";
+            reg = <0x40000000 0xffff>;
+            interrupt-parent = <&icu>;
+            interrupts = <20 21>;
+            interrupt-names = "macirq", "eth_wake_irq";
+            /*mac-address = [ 64 48 48 48 48 60 ]; [>mac 64:48:48:48:48:60 <]*/
+            fixed_phy;
+            bus_id = <0x0>;
+            phy_addr = <0x1>;
+        };
+
+内核需要配置CONFIG_FIXED_PHY

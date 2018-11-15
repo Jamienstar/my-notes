@@ -1,0 +1,72 @@
+diff --git a/kernel-version/cgel5.0/linux/arch/mips/loongson2/init.c b/kernel-version/cgel5.0/linux/arch/mips/loongson2/init.c
+index 2989842..bd8f543 100644
+--- a/kernel-version/cgel5.0/linux/arch/mips/loongson2/init.c
++++ b/kernel-version/cgel5.0/linux/arch/mips/loongson2/init.c
+@@ -20,7 +20,10 @@
+ #include <linux/module.h>
+ #include <linux/string.h>
+ #include <linux/io.h>
++#include <linux/of.h>
+ #include <linux/of_fdt.h>
++#include <linux/phy.h>
++#include <linux/phy_fixed.h>
+ #include <asm/bootinfo.h>
+ #include <asm/prom.h>
+
+@@ -78,6 +81,23 @@ void __init prom_init(void)
+ #endif
+ }
+
++static struct fixed_phy_status fixed_phy_status __initdata = {
++	       .link           = 1,
++	       .speed          = SPEED_100,
++	       .duplex         = DUPLEX_FULL,
++};
++
++static int __init ls2k_register_devices(void)
++{
++	struct device_node *gmac_np;
++
++	gmac_np = of_find_compatible_node(NULL, NULL, "snps,dwmac-3.70a");
++	if (of_find_property(gmac_np, "fixed_phy", NULL)) {
++		fixed_phy_add(PHY_POLL, 1, &fixed_phy_status);
++	}
++	return 0;
++}
++arch_initcall(ls2k_register_devices);
+
+ const char *get_system_type(void)
+ {
+diff --git a/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index 50b1e13..7dbb34a 100644
+--- a/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -934,7 +934,8 @@ static int stmmac_init_phy(struct net_device *dev)
+ 	 * device as well.
+ 	 * Note: phydev->phy_id is the result of reading the UID PHY registers.
+ 	 */
+-	if (phydev->phy_id == 0) {
++	if (phydev->phy_id == 0 && (!priv->plat->phy_bus_name ||
++			strcmp(priv->plat->phy_bus_name,"fixed"))) {
+ 		phy_disconnect(phydev);
+ 		return -ENODEV;
+ 	}
+diff --git a/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c b/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
+index eb3893b..cbbab0b 100644
+--- a/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
++++ b/kernel-version/cgel5.0/linux/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
+@@ -62,6 +62,11 @@ static int stmmac_probe_config_dt(struct platform_device *pdev,
+ 	if (of_device_is_compatible(np, "ls,ls-gmac")) {
+ 		plat->enh_desc = 1;
+ 		/*when bios transmit paratmer is not Null,then analysis data*/
++		if (of_find_property(np, "fixed_phy", NULL)) {
++			plat->phy_bus_name = "fixed";
++			devm_kfree(&pdev->dev, plat->mdio_bus_data);
++			plat->mdio_bus_data = NULL;
++		}
+ 		bus_id_p = (__be32 *)of_get_property(np, "bus_id", NULL);
+ 		phy_addr_p = (__be32 *)of_get_property(np, "phy_addr", NULL);
+ 		dma_mask_p = (__be32 *)of_get_property(np, "dma-mask", NULL);
+--
+2.7.4
+
