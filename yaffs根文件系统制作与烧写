@@ -1,0 +1,8 @@
+1、yaffs文件系统镜像制作
+	mkyaffs2 /xxx/rootfs rootfs.yaffs     （mkyaffs2工具目录 /home/Jamie/workspace/ztkp-tools/yaffs2utils，使用make命令直接生成）
+
+2、yaffs文件系统镜像烧写（内核）
+	若mtd0作为yaffs根文件系统存放位置，可先用flash_erase将分区擦除干净
+	flash_erase /dev/mtd0 0 0
+	然后执行
+	nandwrite -o /dev/mtd0 rootfs.yaffs

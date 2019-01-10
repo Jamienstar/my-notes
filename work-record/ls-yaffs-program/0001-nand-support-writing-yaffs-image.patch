@@ -1,0 +1,344 @@
+From a9a71a3a52fcf39ded7cb728a946ceda5f0f36ce Mon Sep 17 00:00:00 2001
+From: Jamie <jamienstar@163.com>
+Date: Thu, 10 Jan 2019 23:06:17 +0800
+Subject: [PATCH] nand: support writing yaffs image
+
+---
+ Targets/LS2K/conf/ls2k |   3 +-
+ pmon/fs/mtd.c          | 184 ++++++++++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 168 insertions(+), 19 deletions(-)
+ mode change 100644 => 100755 Targets/LS2K/conf/ls2k
+ mode change 100644 => 100755 pmon/fs/mtd.c
+
+diff --git a/Targets/LS2K/conf/ls2k b/Targets/LS2K/conf/ls2k
+old mode 100644
+new mode 100755
+index 8f70aa4..02fae33
+--- a/Targets/LS2K/conf/ls2k
++++ b/Targets/LS2K/conf/ls2k
+@@ -98,6 +98,7 @@ select		mod_display
+ option		CONS_BAUD=B115200
+ select		ext2
+ select		fatfs
++select		yaffsfs
+ select		ramfiles
+ #select		mod_x86emu		# X86 emulation for VGA
+ option		MY40IO
+@@ -127,7 +128,7 @@ option		NOSNOOP			# Caches are no-snooping
+ # HAVE options. What tgt level provide
+ #
+ option		HAVE_TOD		# Time-Of-Day clock
+-option		INTERNAL_RTC		# chip internal RTC
++#option		INTERNAL_RTC		# chip internal RTC
+ #option		EXTERNAL_RTC		# external RTC
+ option		HAVE_NVENV		#  Platform has non-volatile env mem
+ option		HAVE_LOGO		# Output splash logo
+diff --git a/pmon/fs/mtd.c b/pmon/fs/mtd.c
+old mode 100644
+new mode 100755
+index 46cf170..9c7c9c1
+--- a/pmon/fs/mtd.c
++++ b/pmon/fs/mtd.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2000 Opsycon AB  (www.opsycon.se)
+  * Copyright (c) 2002 Patrik Lindergren (www.lindergren.com)
+- * 
++ *
+  * Redistribution and use in source and binary forms, with or without
+  * modification, are permitted provided that the following conditions
+  * are met:
+@@ -82,7 +82,7 @@ static int
+ 	int open_size=0;
+ 	int open_offset=0;
+ 	char *poffset=0,*psize;
+-      
++
+ 	strncpy(namebuf,fname,63);
+ 	dname = namebuf;
+ 	if (strncmp (dname, "/dev/", 5) == 0)
+@@ -90,7 +90,7 @@ static int
+ 	if (strncmp (dname, "mtd", 3) == 0)
+ 		dname += 3;
+ 	else return -1;
+-	
++
+ 	if(dname[0]=='*') idx=-1;
+ 	else if(dname[0]=='/')
+ 	{
+@@ -111,7 +111,7 @@ static int
+ 	else idx=-1;
+ 
+ 
+-		
++
+ 		LIST_FOREACH(p, &mtdfiles, i_next) {
+ 			if(idx==-1)
+ 			 {
+@@ -123,14 +123,14 @@ static int
+ 			else if(p->index==idx) {
+ 				found = 1;
+ 				break;
+-			}	
++			}
+ 		}
+-		
++
+ 		if(!found) {
+ 			return(-1);
+ 		}
+ foundit:
+-	
++
+ 	if(poffset)
+ 	{
+ 	 if((psize=strchr(poffset,',')))
+@@ -140,7 +140,7 @@ foundit:
+ 	 }
+ 	 open_offset=strtoul(poffset,0,0);
+ 	}
+-	
++
+ 	p->refs++;
+ 	priv=malloc(sizeof(struct mtdpriv));
+ 	priv->file=p;
+@@ -149,7 +149,7 @@ foundit:
+ 
+ 	_file[fd].posn = 0;
+ 	_file[fd].data = (void *)priv;
+-	
++
+ 	return (fd);
+ }
+ 
+@@ -163,7 +163,7 @@ static int
+ 	priv = (mtdpriv *)_file[fd].data;
+ 	priv->file->refs--;
+ 	free(priv);
+-	   
++
+ 	return(0);
+ }
+ 
+@@ -186,7 +186,7 @@ static int
+ 	p->mtd->read(p->mtd,_file[fd].posn+priv->open_offset+p->part_offset,n,&n,buf);
+ 
+ 	_file[fd].posn += n;
+-      
++
+ 	return (n);
+ }
+ 
+@@ -361,7 +361,7 @@ static int cmd_flash_erase(int argc,char **argv)
+     erase.priv = 0;
+     if(priv->flags & MTD_FLAGS_RAW)
+         printf("\nERASE the device:\"%s\",DON'T skip bad-blocks\n\n",path);
+-    else 
++    else
+         printf("\nERASE the device:\"%s\",SKIP bad-blocks\n\n",path);
+ //    printf("end==0x%08x,start=0x%08x\n",end,start);
+     printf("mtd_erase working: \n%08x  ",start);
+@@ -381,11 +381,158 @@ static int cmd_flash_erase(int argc,char **argv)
+             start += mtd->erasesize;
+         }
+     }
+-    close(fp);    
++    close(fp);
+     printf("\nmtd_erase work done!\n");
+     return 0;
+ }
+ 
++int cmd_nandwrite(int argc, char **argv)
++{
++	const char *usage =
++		"nandwrite usage:\n"
++		"nandwrite <input> <mtddev> [oob]\n"
++		"  <input>  input file\n"
++		"  <mtddev> mtd deivce, such as '/dev/mtd1'\n"
++		"  [oob]    input contains oob data(for yaffs2)\n";
++
++	if ( argc < 3 ) {
++		printf("%s\n", usage);
++		return -1;
++	}
++
++	int idx;
++	int ret;
++
++	/* options */
++	int write_oob = 0;
++
++	for (idx = 3; idx < argc; ++idx) {
++		if (!strcmp(argv[idx],"oob")) {
++			write_oob = 1;
++		}
++	}
++
++	const char *src_fn = argv[1];
++	const char *mtd_fn = argv[2];
++
++	int fp_src = open(src_fn, O_RDONLY);
++	int fp_mtd = open(mtd_fn, O_WRONLY);
++
++	if (fp_src < 0 || fp_mtd < 0) {
++		if (fp_src<0) {
++			printf("Can't open src: %\n", src_fn);
++		}
++		else {
++			close(fp_src);
++		}
++		if(fp_mtd < 0) {
++			printf("Can't open mtd: %s\n", mtd_fn);
++		}
++		else {
++			close(fp_mtd);
++		}
++		return -1;
++	}
++
++	mtdpriv *mtd_priv;
++	mtdfile *mtd_file;
++	struct mtd_info *mtd;
++	struct nand_chip *chip;
++
++	mtd_priv = (mtdpriv*)_file[fp_mtd].data;
++	mtd_file = mtd_priv->file;
++	mtd      = mtd_file->mtd;
++	chip     = mtd->priv;
++
++	int erase_size = mtd->erasesize;
++	int page_size  = mtd->writesize;
++	int oob_size  = mtd->oobsize;
++
++	printf("Erase size=%d page size=%d oob size=%d\n", erase_size, page_size, oob_size);
++
++	uint8_t *buf = malloc((page_size + oob_size) * 2);
++	if (buf == NULL) {
++		printf("No memory for nandwrite\n");
++		close(fp_mtd);
++		close(fp_src);
++		return -1;
++	}
++
++	uint8_t *buf_dump = buf + (page_size + oob_size);
++
++	struct mtd_oob_ops ops;
++	int ipage = 0;
++	while (1) {
++		/* write a page */
++		int unit_size = page_size;
++		if (write_oob)
++			unit_size += oob_size;
++
++		ret = read(fp_src, buf, unit_size);
++		if (ret != unit_size) {
++			printf( "fread from src done @page=%d. ret=%d expect=%d\n", ipage, ret, unit_size );
++			break;
++		}
++
++		ops.mode = MTD_OOB_RAW;
++		ops.len     = page_size;
++		ops.ooblen  = oob_size;
++		ops.ooboffs = 0;
++		ops.datbuf  = buf;
++		ops.oobbuf  = NULL;
++		if (write_oob) {
++			ops.oobbuf = buf + page_size;
++		}
++
++		int start = ipage * page_size;
++		ret = mtd->write_oob(mtd, start, &ops);
++		if (ret != 0) {
++			printf("mtd write oob failed: %d\n", ret);
++			break;
++		}
++
++		/* read and verify */
++		ops.datbuf = buf_dump;
++		ops.oobbuf = NULL;
++		if (write_oob) {
++			ops.oobbuf = buf_dump + page_size;
++		}
++		ret = mtd->read_oob(mtd, start, &ops);
++		if (ret != 0) {
++			printf("mtd read oob failed: %d\n", ret);
++			break;
++		}
++
++		if (memcmp(buf, buf_dump, unit_size)) {
++			printf("verify failed, @page=%d\n", ipage);
++
++			for(idx = 0; idx < unit_size/4; idx += 8) {
++				int i;
++				printf("%-4d ", idx * 4);
++				for (i = 0; i < 8; ++i) {
++					printf("%08X ", ((uint32_t*)(buf))[idx + i]);
++				}
++				printf("\n     ");
++				for (i = 0; i < 8; ++i) {
++					printf("%08X ", ((uint32_t*)(buf_dump))[idx + i]);
++				}
++				printf("\n");
++			}
++			break;
++		}
++
++		ipage++;
++	}
++
++	printf("nandwrite done, writed page = %d\n", ipage);
++	if (buf)
++		free(buf);
++	close(fp_mtd);
++	close(fp_src);
++
++	return 0;
++}
++
+ static struct mtd_partition *partitions;
+ static int num_partitions;
+ static struct mtd_info *nand_flash_mtd_info;
+@@ -394,11 +541,11 @@ int nand_flash_add_parts(struct mtd_info *mtd_soc,char *cmdline)
+ {
+ 
+     int i;
+-    if(!nand_flash_mtd_info) 
++    if(!nand_flash_mtd_info)
+         nand_flash_mtd_info = mtd_soc;
+     num_partitions = parse_cmdline_partitions(mtd_soc,&partitions,0,cmdline);
+-    if(num_partitions > 0){ 
+-        for(i=0;i < num_partitions;i++){ 
++    if(num_partitions > 0){
++        for(i=0;i < num_partitions;i++){
+             add_mtd_device(mtd_soc,partitions[i].offset,partitions[i].size,partitions[i].name);
+         }
+     }
+@@ -416,7 +563,7 @@ void first_del_all_parts(struct mtd_info *soc_mtd)
+ int mtd_rescan(char *name,char*value)
+ {
+     if(value && nand_flash_mtd_info){
+-        first_del_all_parts(nand_flash_mtd_info); 
++        first_del_all_parts(nand_flash_mtd_info);
+         nand_flash_add_parts(nand_flash_mtd_info,value);
+     }
+     return 1;
+@@ -426,7 +573,7 @@ int my_mtdparts(int argc,char**argv)
+ {
+     struct mtd_partition *parts=partitions;
+     int num=num_partitions,i;
+-    printf("device <%s>,#parts = %d\n\n",nand_flash_mtd_info->name,num);     
++    printf("device <%s>,#parts = %d\n\n",nand_flash_mtd_info->name,num);
+     printf(" #: name\tsize\t\toffset\t\tmask_flags\n");
+     for(i=0;i<num;i++){
+         printf(" %d: %s\t0x%08x(%dm)\t0x%08x(%dm)\t%x\n",i,parts[i].name,parts[i].size,parts[i].size>>20, parts[i].offset,parts[i].offset>>20,parts[i].mask_flags);
+@@ -444,6 +591,7 @@ static const Cmd Cmds[] =
+ 	{"MyCmds"},
+ 	{"mtdparts","0",0,"NANDFlash OPS:mtdparts ",my_mtdparts,0,99,CMD_REPEAT},
+ 	{"mtd_erase","nand-flash-device",0,"NANDFlash OPS:mtd_erase /dev/mtdx",cmd_flash_erase,0,99,CMD_REPEAT},
++	{"nandwrite", "write nand flash",  0, "", cmd_nandwrite, 0, 99, CMD_REPEAT},
+ 	{0, 0}
+ };
+ 
+-- 
+2.7.4
+

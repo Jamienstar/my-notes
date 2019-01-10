@@ -1,0 +1,2 @@
+1、pmon下更新pmon
+	将编译的pmon固件 gzrom.bin放到tftp服务器，假设服务器ip 192.168.10.10， 更新pmon的命令为： load -r -f 0xbfc00000 tftp://192.168.10/10/gzrom.bin

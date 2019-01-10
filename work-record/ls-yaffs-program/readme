@@ -1,0 +1,19 @@
+yaffs根文件系统烧写操作步骤：
+
+1、合入附件中的两个补丁
+	0001-driver-loongson-nand-should-use-soft-ecc.patch 针对内核
+	0001-nand-support-writing-yaffs-image.patch 针对pmon
+
+2、镜像制作
+	使用命令 `mkyaffs2 rootfs rootfs.yaffs2` 生成rootfs.yaffs2镜像文件，其中rootfs用于指定根文件系统所在目录
+	使用命令 `mkecc -f rootfs.yaffs2 -o rootfs.yaffs2.softecc`，生成带ECC的yaffs2镜像文件，这个文件只用于pmon中烧写根文件系统
+	mkyaffs2和mkecc工具额外提供
+
+3、pmon中烧写根文件系统镜像（网络烧写）
+	使用命令 `mtd_erase /dev/mtd0` 擦除分区内容
+	使用命令 `nandwrite tftp://ip/path/rootfs.yaffs2.softecc /dev/mtd0 oob` 将带ecc的yaffs镜像烧写到mtd0分区中，oob指定需要烧写oob数据
+
+4、内核增加启动参数
+	root=/dev/mtdblock0 rootfstyle=yaffs
+
+

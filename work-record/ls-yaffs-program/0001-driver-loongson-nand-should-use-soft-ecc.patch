@@ -1,0 +1,43 @@
+From 2bd0e1a938ec979d5a736452a6ebb1e9a403de73 Mon Sep 17 00:00:00 2001
+From: Jamie <jamienstar@163.com>
+Date: Thu, 10 Jan 2019 00:33:30 +0800
+Subject: [PATCH] driver: loongson nand should use soft ecc.
+
+---
+ kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c b/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
+index d58340e..11ebe29 100644
+--- a/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
++++ b/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
+@@ -416,6 +416,10 @@ static void ls_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
+ 	case NAND_CMD_ERASE2:
+ 	case NAND_CMD_READ1:
+ 		break;
++        case NAND_CMD_RNDOUT:
++		info->buf_start = column;
++		break;
++
+ 	default:
+ 		printk(KERN_ERR "non-supported command.\n");
+ 		break;
+@@ -501,12 +505,12 @@ static void ls_nand_init_mtd(struct mtd_info *mtd,
+ 	this->read_buf		= ls_nand_read_buf;
+ 	this->write_buf		= ls_nand_write_buf;
+ 
+-	this->ecc.mode		= NAND_ECC_NONE;
++	this->ecc.mode		= NAND_ECC_SOFT;
+ 	this->ecc.hwctl		= ls_nand_ecc_hwctl;
+ 	this->ecc.calculate	= ls_nand_ecc_calculate;
+ 	this->ecc.correct	= ls_nand_ecc_correct;
+-	this->ecc.size		= 2048;
+-	this->ecc.bytes		= 24;
++	this->ecc.size		= 256;
++	this->ecc.bytes		= 3;
+ 	mtd->owner = THIS_MODULE;
+ }
+ 
+-- 
+2.7.4
+
