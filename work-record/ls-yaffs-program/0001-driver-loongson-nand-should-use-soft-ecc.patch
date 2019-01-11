@@ -4,13 +4,13 @@ Date: Thu, 10 Jan 2019 00:33:30 +0800
 Subject: [PATCH] driver: loongson nand should use soft ecc.
 
 ---
- kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c | 10 +++++++---
+ linux/drivers/mtd/nand/ls-nand.c | 10 +++++++---
  1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c b/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
+diff --git a/linux/drivers/mtd/nand/ls-nand.c b/linux/drivers/mtd/nand/ls-nand.c
 index d58340e..11ebe29 100644
---- a/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
-+++ b/kernel-version/cgel5.0/linux/drivers/mtd/nand/ls-nand.c
+--- a/linux/drivers/mtd/nand/ls-nand.c
++++ b/linux/drivers/mtd/nand/ls-nand.c
 @@ -416,6 +416,10 @@ static void ls_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
  	case NAND_CMD_ERASE2:
  	case NAND_CMD_READ1:
