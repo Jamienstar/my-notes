@@ -1,0 +1,11 @@
+./x86_64-softmmu/qemu-system-x86_64 -m 8096 -nographic -append "rw console=ttyS0,115200 earlycon" -smp 4 \
+  -kernel ../stand-kernel/X86-64/linux-5.0.2/arch/x86_64/boot/bzImage
+  
+./aarch64-softmmu/qemu-system-aarch64 -M virt -m 8096 -nographic -append "root=/dev/ram0 rw console=ttyAMA0,115200 earlycon=pl011" \
+  -cpu cortex-a53 -smp 8 -kernel ../stand-kernel/ARM-64/linux-5.0.2/arch/arm64/boot/Image
+  
+  
+./arm-softmmu/qemu-system-arm -M vexpress-a9 -m 1024 -dtb ../linux-5.0.2/arch/arm/boot/dts/vexpress-v2p-ca9.dtb -nographic \
+        -append "root=/dev/ram0 rw console=ttyAMA0,115200 earlycon=pl011" -smp 4 \
+        -kernel ../stand-kernel/ARM/linux-5.0.2/arch/arm/boot/zImage
+
