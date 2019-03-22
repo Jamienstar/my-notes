@@ -1,0 +1,1 @@
+mtdparts=nand-test:64M(part1)ro,-(part2)
