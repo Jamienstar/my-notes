@@ -1,0 +1,14 @@
+1、创建镜像
+    qemu-img create -f raw ./virt-disk 8G     
+    losetup /dev/loop6 ./virt-disk      利用loop设备对应虚拟磁盘镜像进行分区、格式化、拷贝文件等操作
+    parted /dev/loop6                   parted具体操作可网上寻找资料
+    mkfs.ext4 /dev/loop6p1
+    mount /dev/loop6p1 ./test           可向虚拟磁盘相应分区中拷贝文件
+    umount ./test
+    losetup -d /dev/loop6
+2、转换镜像格式
+    qemu-img convert -f raw ./virt-disk -O qcow2 ./virt-disk.qcow2
+3、qemu加载磁盘镜像（参考）
+    ./qemu-system-aarch64 -M virt -m 8096 -nographic -append "root=/dev/vda1 rw console=ttyAMA0,115200 earlycon=pl011" \
+    -cpu cortex-a53 -smp 8 -kernel ./arch/arm64/boot/Image -hda ../virt-disk.qcow2
+    
