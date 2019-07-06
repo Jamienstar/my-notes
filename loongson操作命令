@@ -1,0 +1,10 @@
+1、 ifconfig syn1 192.168.50.10
+2、 load tftp://192.168.50.5/vmlinuz
+3、 load -r -f -bfc00000 tftp://192.168.50.5/gzrom.bin    /* 更新boot（pmon） */
+4、 devcp tftp://192.168.50.5/rootfs.yaffs2.softecc /dev/mtd0 bs=0x840
+5、 nandwrite tftp://192.168.50.5/rootfs.yaffs2 /dev/mtd0 oob
+
+6、 go console=ttyS0,115200
+7、 go console=ttyS0,115200 root=/dev/mtdblock0 rootfstyle=yaffs
+
+8、 load /dev/fs/ext2@wd0/boot/vmlinux-bak
