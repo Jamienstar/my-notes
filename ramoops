@@ -4,3 +4,6 @@
       Documentation/admin-guide/ramoops.rst
 2、访问记录文件
       mount -t pstore nodev /sys/fs/pstore
+3、查看参数信息：
+      /sys/module/ramoops/parameters
+      /sys/module/pstore/parameters
