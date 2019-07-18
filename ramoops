@@ -1,0 +1,6 @@
+1、相关文档
+      Documentation/ABI/testing/pstore
+      Documentation/devicetree/bindings/reserved-memory/ramoops.txt
+      Documentation/admin-guide/ramoops.rst
+2、访问记录文件
+      mount -t pstore nodev /sys/fs/pstore
