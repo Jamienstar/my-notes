@@ -14,3 +14,4 @@
 ./aarch64-softmmu/qemu-system-aarch64 -M virt -m 8096 -nographic -append "root=/dev/ram0 rw console=ttyAMA0,115200 earlycon=pl011" \
   -cpu cortex-a53 -smp 8 -kernel ../stand-kernel/ARM-64/linux-5.0.2/arch/arm64/boot/Image -net nic -net tap,ifname=tap0
 
+qemu-system-arm -M vexpress-a9 -m 1024 -dtb ./default.dtb -nographic -append "rdinit=/linuxrc rw console=ttyAMA0,115200 earlycon=pl011" -smp 4 -kernel ./zImage -initrd ./initrd.gz
