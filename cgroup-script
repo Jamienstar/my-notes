@@ -1,0 +1,28 @@
+ifconfig eth0 192.168.1.8
+hostname master
+echo "127.0.0.1       localhost" > /etc/hosts
+echo "127.0.1.1       master" >> /etc/hosts
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+route add default gw 192.168.1.1
+mount -t tmpfs tmpfs /sys/fs/cgroup/
+mkdir /sys/fs/cgroup/freezer
+mkdir /sys/fs/cgroup/pids
+mkdir /sys/fs/cgroup/memory
+mkdir /sys/fs/cgroup/cpu,cpuacct
+mkdir /sys/fs/cgroup/blkio
+mkdir /sys/fs/cgroup/cpuset
+mkdir /sys/fs/cgroup/devices
+
+
+mount -t cgroup cgroup -o cpuset /sys/fs/cgroup/cpuset/
+mount -t cgroup cgroup -o cpu,cpuacct /sys/fs/cgroup/cpu,cpuacct
+mount -t cgroup cgroup -o blkio /sys/fs/cgroup/blkio
+mount -t cgroup cgroup -o memory /sys/fs/cgroup/memory
+mount -t cgroup cgroup -o devices /sys/fs/cgroup/devices
+mount -t cgroup cgroup -o freezer /sys/fs/cgroup/freezer
+mount -t cgroup cgroup -o pids /sys/fs/cgroup/pids
+
+cd /sys/fs/cgroup/
+ln -s cpu,cpuacct/ cpu
+ln -s cpu,cpuacct/ cpuacct
+cd /
