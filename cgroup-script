@@ -26,3 +26,5 @@ cd /sys/fs/cgroup/
 ln -s cpu,cpuacct/ cpu
 ln -s cpu,cpuacct/ cpuacct
 cd /
+
+dockerd --storage-driver overlay2 --log-opt max-size=12m --log-level error --daemonlog-driver=syslog --daemonlog-opt syslog-facility=local1 &
