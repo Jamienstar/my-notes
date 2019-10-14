@@ -16,3 +16,8 @@
 
 qemu-system-arm -M vexpress-a9 -m 1024 -dtb ./default.dtb -nographic -append \
         "rdinit=/linuxrc rw console=ttyAMA0,115200 earlycon=pl011" -smp 4 -kernel ./zImage -initrd ./initrd.gz
+
+vexpress随机数设置启动
+qemu-system-arm -M vexpress-a9 -m 1024 -dtb ./vexpress-v2p-ca9.dtb -nographic -append "rdinit=/linuxrc rw console=ttyAMA0,115200 \
+earlycon=pl011" -smp 4 -kernel ./zImage -initrd ./initrd.gz -net nic -net tap,ifname=tap0 \
+-object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-device,rng=rng0
