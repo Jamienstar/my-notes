@@ -1,1 +1,1 @@
-find . | cpio -H newc -o | gzip -9 >../initrd.gz
+find . | cpio -H newc -o | gzip -9 > ../initrd.gz
