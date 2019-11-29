@@ -1,0 +1,2 @@
+1、log debug信息：
+内核cmdline传参：systemd.log_level=debug systemd.log_target=console
